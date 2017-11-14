@@ -8,36 +8,24 @@ from bs4 import BeautifulSoup
 import urllib.request as urllib2
 from urllib import request
 import cv2
-import heapq
-import numpy as np
-import glob, os
+import os
 import json
-#global
-pixel_size = 20
+
+# global
+from MainPhotomosaic import pixel_size
 
 
-def average_color(src):
-    """
-    This will get the average color of the image. It will return a tuple of the average color which will be used for the
-    photomosaic. It will at least need the source. The other values are used with our based image.
-
-    :param src:
-    :return average_color_tuple:
-    """
-
-    r, g, b = 0, 0, 0
-    count = 0
-    for x in range(pixel_size):
-        for y in range(pixel_size):
-            tempR, tempG, tempB = src[x, y]
-            r += tempR
-            g += tempG
-            b += tempB
+def average_color(row_start, row_stop, col_start, col_stop, src):
+    r, g, b, count = 0, 0, 0, 0
+    for row in range(row_start, row_stop):
+        for col in range(col_start, col_stop):
+            r += src[row, col][0]
+            b += src[row, col][1]
+            g += src[row, col][2]
             count += 1
 
-    # calculate averages
-    average_color_tuple = ((r/count), (g/count), (b/count))
-    return average_color_tuple
+    # Return image that first this average
+    return float(r) / float(count), float(g) / float(count), float(b) / float(count)
 
 
 def db_image_resize(img_url):
@@ -52,6 +40,7 @@ def db_image_resize(img_url):
 
     img = cv2.imread("temp.jpg")
     newsize_img = cv2.resize(img, (pixel_size, pixel_size))
+    cv2.imwrite("temp.jpg", newsize_img)
     return newsize_img
 
 
@@ -80,8 +69,8 @@ def image_db_scrapper(src, filename):
     increase_page = 0
     images = {}
 
-    while count <= 200:
-        print("Process 2k Images! Percentage Complete: " + "{0:.0f}%".format((count/2000)*100))
+    while count <= 5000:
+        print("Process 2k Images! Percentage Complete: " + "{0:.0f}%".format((count/5000)*100))
 
         # Issue while using BeautifulSoup needed parser the solution was found in the below link
         # https://stackoverflow.com/questions/36192122/beautifulsoup-html-parser-error
@@ -97,12 +86,8 @@ def image_db_scrapper(src, filename):
                 pass
             else:
                 newsize_img = db_image_resize(img_src)
-                # newsize_img = cv2.imread(newsize_img)
-                color = average_color(newsize_img)
-                used_count = 0
-                # images[img.get('src')] = [color]
+                color = average_color(0, pixel_size, 0, pixel_size, newsize_img)
                 images[img_src] = [color]
-
 
         # We got all the photos now we will change the url by one
         src2 = src2.replace("-st" + str(increase_page) + "00", "-st" + str(increase_page+1) + "00")
@@ -110,11 +95,8 @@ def image_db_scrapper(src, filename):
         # Now we will reload the html object
         html_page = urllib2.urlopen(src2)
 
-    file = open(os.path.join("./image_db", filename +".txt"), 'w')
-    # for i in images:
-    #     file.write('%s:%s\n' % (i, images[i]))
+    file = open(os.path.join("./image_db", filename + ".txt"), 'w')
     file.write(json.dumps(images))
     file.close()
 
     return images
-
