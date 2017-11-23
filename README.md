@@ -56,3 +56,8 @@ git push origin <branch name >                               | To show the branc
 * Creating and pushing new branch into repository
     1. git branch new-ui >>> git commit -a >>> vim >>> git push -u origin new-ui
 
+
+INSTALL
+pip install beautifulsoup4
+
+https://www.thoughtco.com/images-of-us-presidents-4123096

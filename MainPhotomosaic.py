@@ -43,7 +43,7 @@ from ImageDB import *
 import cv2
 import math
 
-pixel_size = 10
+pixel_size = 20
 blank_image_size = 1000
 
 def get_random_image(base_avg, db_images):
@@ -91,7 +91,7 @@ def base_image_processing(mosaic_in, db_images):
         print("Creating Image Please Wait....." + "{0:.0f}%".format((i/blank_image_size)*100))
     blank_photomosaic_image.save("photomosaic.jpg")
     sideways_image = Image.open("photomosaic.jpg")
-    corrected_image = sideways_image.rotate(90)
+    corrected_image = sideways_image.rotate(270)
     corrected_image.save("photomosaic.jpg")
 
 
