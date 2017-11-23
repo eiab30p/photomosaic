@@ -60,4 +60,22 @@ git push origin <branch name >                               | To show the branc
 INSTALL
 pip install beautifulsoup4
 
+Used for images
 https://www.thoughtco.com/images-of-us-presidents-4123096
+I got all the photos from here and then a typed a little code toresize all photos to 500 by 500.
+Once that is completed I got the json filr using the below link since I had issues with the dlob file
+for windows.
+
+used for points
+https://www.faceplusplus.com/landmarks/
+Need to convert Json into normal list
+
+After I got the points I did the triangle thing. using the below site to understand the
+algorithm used.
+
+After this I worked on the translation part where I warped and scaled, moved the image to fit the points.
+
+
+
+
+
