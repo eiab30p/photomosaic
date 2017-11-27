@@ -5,15 +5,21 @@ import cv2
 import sys
 
 # Read points from text file
-def readPoints(path) :
+def readPoints(path):
     # Create an array of points.
-    points = [];
+    points = []
+    tri = []
     # Read points
+    count = 0
     with open(path) as file :
-        for line in file :
-            x, y = line.split()
-            points.append((int(x), int(y)))
-
+        for line in file:
+            if count % 4 == 0 and count != 0:
+                points.append((tri[0], tri[1], tri[2]))
+                tri = []
+            else:
+                x, y = line.split()
+                tri.append((int(x), int(y)))
+            count = count + 1
     return points
 
 # Apply affine transform calculated using srcTri and dstTri to src and
@@ -43,16 +49,15 @@ def morphTriangle(img1, img2, img, t1, t2, t, alpha) :
     t2Rect = []
     tRect = []
 
-
     for i in range(0, 3):
-        tRect.append(((t[i][0] - r[0]),(t[i][1] - r[1])))
-        t1Rect.append(((t1[i][0] - r1[0]),(t1[i][1] - r1[1])))
-        t2Rect.append(((t2[i][0] - r2[0]),(t2[i][1] - r2[1])))
+        tRect.append(((t[i][0] - r[0]), (t[i][1] - r[1])))
+        t1Rect.append(((t1[i][0] - r1[0]), (t1[i][1] - r1[1])))
+        t2Rect.append(((t2[i][0] - r2[0]), (t2[i][1] - r2[1])))
 
-
+    print(r)
     # Get mask by filling triangle
     mask = np.zeros((r[3], r[2], 3), dtype = np.float32)
-    cv2.fillConvexPoly(mask, np.int32(tRect), (1.0, 1.0, 1.0), 16, 0);
+    cv2.fillConvexPoly(mask, np.int32(tRect), (1.0, 1.0, 1.0), 16, 0)
 
     # Apply warpImage to small rectangular patches
     img1Rect = img1[r1[1]:r1[1] + r1[3], r1[0]:r1[0] + r1[2]]
@@ -71,48 +76,38 @@ def morphTriangle(img1, img2, img, t1, t2, t, alpha) :
 
 if __name__ == '__main__' :
 
-    filename1 = 'hillary_clinton.jpg'
-    filename2 = 'ted_cruz.jpg'
-    alpha = 0.5
+    filename1 = './based_image_db/normalJason.png'
+    filename2 = './based_image_db/aquaJason.png'
+    alpha = 0.4
 
     # Read images
-    img1 = cv2.imread(filename1);
-    img2 = cv2.imread(filename2);
+    img1 = cv2.imread(filename1)
+    img2 = cv2.imread(filename2)
 
     # Convert Mat to float data type
     img1 = np.float32(img1)
     img2 = np.float32(img2)
 
-    # Read array of corresponding points
-    points1 = readPoints(filename1 + '.txt')
-    points2 = readPoints(filename2 + '.txt')
-    points = [];
+    tri1 = './triangulation_points/start.txt'
+    tri2 = './triangulation_points/end.txt'
+    tri3 = './triangulation_points/0.2.txt'
 
-    # Compute weighted average point coordinates
-    for i in range(0, len(points1)):
-        x = ( 1 - alpha ) * points1[i][0] + alpha * points2[i][0]
-        y = ( 1 - alpha ) * points1[i][1] + alpha * points2[i][1]
-        points.append((x,y))
+    # Read array of corresponding points
+    points1 = readPoints(tri1)
+    points2 = readPoints(tri2)
+    points = readPoints(tri3)
+
 
     # Allocate space for final output
     imgMorph = np.zeros(img1.shape, dtype = img1.dtype)
-    # Read triangles from tri.txt
-    with open("tri.txt") as file :
-        for line in file :
-            x,y,z = line.split()
 
-            x = int(x)
-            y = int(y)
-            z = int(z)
+    for i in range(len(points1)):
+        t1 = [points1[i][0], points1[i][1], points1[i][2]]
+        t2 = [points2[i][0], points2[i][1], points2[i][2]]
+        t = [points[i][0], points[i][1], points[i][2]]
 
-            # This is just the triangles cords... we are just going to have the ones that spit out by it self. :/
-            t1 = [points1[x], points1[y], points1[z]]
-            t2 = [points2[x], points2[y], points2[z]]
-            t = [ points[x], points[y], points[z] ]
-            # print(points[x], points[y], points[z],x,y,z)
-
-            # Morph one triangle at a time. (imag1,imag2, blank morphing, triangle1,2,3, and alpha
-            morphTriangle(img1, img2, imgMorph, t1, t2, t, alpha)
+        # Morph one triangle at a time. (imag1,imag2, blank morphing, triangle1,2,3, and alpha
+        morphTriangle(img1, img2, imgMorph, t1, t2, t, alpha)
 
 
     # Display Result
