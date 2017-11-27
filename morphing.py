@@ -1,130 +1,120 @@
-import cv2
-from json import *
+#!/usr/bin/env python
+
 import numpy as np
-import os
-#import requests
-import json
-import random
+import cv2
+import sys
 
-########## merging
-# img1 = cv2.imread("base.jpg")
-# img2 = cv2.imread("hillary_clinton.jpg")
-#
-# newsize_img = cv2.resize(img1, (500, 500))
-# cv2.imwrite("base.jpg", newsize_img)
-#
-# newsize_img = cv2.resize(img2, (500, 500))
-# cv2.imwrite("hillary_clinton.jpg", newsize_img)
-#
-# img1 = cv2.imread("base.jpg")
-# img2 = cv2.imread("hillary_clinton.jpg")
-#
-# dst = cv2.addWeighted(img1, 0.5, img2, 0.5, 0)
-# cv2.imshow('dst', dst)
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
-
-
-# This is used temp for a quick resize of all images. One time use. Then I removed all jpg.
-def resize_presidents():
-    for filename in os.listdir("./based_image_db"):
-        if filename.endswith(".jpg"):
-            img1 = cv2.imread("./based_image_db/" + filename)
-            newsize_img = cv2.resize(img1, (500, 500))
-            cv2.imwrite("./based_image_db/" + filename[:-4] + ".png", newsize_img)
-            os.remove("./based_image_db/" + filename)
-
-
-### We are going to try and use an api to get the cordinates of what we need :S
-def get_facial_landscapes():
-    for filename in os.listdir("./based_image_db"):
-        if filename.endswith(".png"):
-            print("New Image!!!!!!"+filename+"\n\n")
-            url = "https://api-us.faceplusplus.com/facepp/v3/detect"
-            data={"api_key":"Nvs5_JbdDW6WsYKVCeGXy6e8S4USNxim",
-                  "api_secret":"sEsX4zUtz2ZizNLA_GLZqvhGyWMl364Q",
-                  "return_landmark":1}
-            files={
-                "image_file":open("./based_image_db/" + filename,"rb")
-            }
-            response = requests.post(url, data=data, files=files)
-            req_con=response.content.decode('utf-8')
-            req_dict = JSONDecoder().decode(req_con)
-            # python reads the entire json as dictionaries so we call each key until value of x and y
-            # IDE terminal may cause issues try in commandline
-            f = open("./facial_landscapes/" + filename[:-4]+".txt",'w')
-
-            for i in req_dict["faces"][0]["landmark"]:
-                f.write(str(req_dict["faces"][0]["landmark"][i]["x"]) + " "
-                        + str(req_dict["faces"][0]["landmark"][i]["y"]) + "\n")
-                print(req_dict["faces"][0]["landmark"][i]["x"])
-                print(req_dict["faces"][0]["landmark"][i]["y"])
-                print()
-            f.close()
-
-
-
-
-
-
-# Draw delaunay triangles
-def draw_delaunay(img, subdiv, delaunay_color ) :
-
-    triangleList = subdiv.getTriangleList()
-    size = img.shape
-    r = (0, 0, size[1], size[0])
-
-    for t in triangleList:
-        pt1 = (t[0], t[1])
-        pt2 = (t[2], t[3])
-        pt3 = (t[4], t[5])
-
-        cv2.line(img, pt1, pt2, delaunay_color, 1, cv2.LINE_AA, 0)
-        cv2.line(img, pt2, pt3, delaunay_color, 1, cv2.LINE_AA, 0)
-        cv2.line(img, pt3, pt1, delaunay_color, 1, cv2.LINE_AA, 0)
-
-
-if __name__ == '__main__':
-
-    # Define window names
-    win_delaunay = "Delaunay Triangulation"
-
-    # Define colors for drawing.
-    delaunay_color = (255,255,255)
-
-    # Read in the image.
-    img = cv2.imread("./based_image_db/43.png")
-
-    # Keep a copy around
-    img_orig = img.copy()
-
-    # Rectangle to be used with Subdiv2D
-    size = img.shape
-    rect = (0, 0, size[1], size[0])
-
-    # Create an instance of Subdiv2D
-    subdiv = cv2.Subdiv2D(rect)
-
+# Read points from text file
+def readPoints(path) :
     # Create an array of points.
-    points = []
-
-    # Read in the points from a text file
-    with open("./facial_landscapes/43.txt") as file:
+    points = [];
+    # Read points
+    with open(path) as file :
         for line in file :
             x, y = line.split()
             points.append((int(x), int(y)))
 
-    # Insert points into subdiv
-    for p in points:
-        subdiv.insert(p)
+    return points
 
-    # Draw delaunay triangles
-    draw_delaunay( img, subdiv, (255, 255, 255) )
+# Apply affine transform calculated using srcTri and dstTri to src and
+# output an image of size.
+def applyAffineTransform(src, srcTri, dstTri, size) :
+
+    # Given a pair of triangles, find the affine transform.
+    warpMat = cv2.getAffineTransform( np.float32(srcTri), np.float32(dstTri) )
+
+    # Apply the Affine Transform just found to the src image
+    dst = cv2.warpAffine( src, warpMat, (size[0], size[1]), None, flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT_101 )
+
+    return dst
 
 
+# Warps and alpha blends triangular regions from img1 and img2 to img
+def morphTriangle(img1, img2, img, t1, t2, t, alpha) :
 
-    # Show results
-    cv2.imshow(win_delaunay,img)
+    # Find bounding rectangle for each triangle
+    r1 = cv2.boundingRect(np.float32([t1]))
+    r2 = cv2.boundingRect(np.float32([t2]))
+    r = cv2.boundingRect(np.float32([t]))
+
+
+    # Offset points by left top corner of the respective rectangles
+    t1Rect = []
+    t2Rect = []
+    tRect = []
+
+
+    for i in range(0, 3):
+        tRect.append(((t[i][0] - r[0]),(t[i][1] - r[1])))
+        t1Rect.append(((t1[i][0] - r1[0]),(t1[i][1] - r1[1])))
+        t2Rect.append(((t2[i][0] - r2[0]),(t2[i][1] - r2[1])))
+
+
+    # Get mask by filling triangle
+    mask = np.zeros((r[3], r[2], 3), dtype = np.float32)
+    cv2.fillConvexPoly(mask, np.int32(tRect), (1.0, 1.0, 1.0), 16, 0);
+
+    # Apply warpImage to small rectangular patches
+    img1Rect = img1[r1[1]:r1[1] + r1[3], r1[0]:r1[0] + r1[2]]
+    img2Rect = img2[r2[1]:r2[1] + r2[3], r2[0]:r2[0] + r2[2]]
+
+    size = (r[2], r[3])
+    warpImage1 = applyAffineTransform(img1Rect, t1Rect, tRect, size)
+    warpImage2 = applyAffineTransform(img2Rect, t2Rect, tRect, size)
+
+    # Alpha blend rectangular patches
+    imgRect = (1.0 - alpha) * warpImage1 + alpha * warpImage2
+
+    # Copy triangular region of the rectangular patch to the output image
+    img[r[1]:r[1]+r[3], r[0]:r[0]+r[2]] = img[r[1]:r[1]+r[3], r[0]:r[0]+r[2]] * ( 1 - mask ) + imgRect * mask
+
+
+if __name__ == '__main__' :
+
+    filename1 = 'hillary_clinton.jpg'
+    filename2 = 'ted_cruz.jpg'
+    alpha = 0.5
+
+    # Read images
+    img1 = cv2.imread(filename1);
+    img2 = cv2.imread(filename2);
+
+    # Convert Mat to float data type
+    img1 = np.float32(img1)
+    img2 = np.float32(img2)
+
+    # Read array of corresponding points
+    points1 = readPoints(filename1 + '.txt')
+    points2 = readPoints(filename2 + '.txt')
+    points = [];
+
+    # Compute weighted average point coordinates
+    for i in range(0, len(points1)):
+        x = ( 1 - alpha ) * points1[i][0] + alpha * points2[i][0]
+        y = ( 1 - alpha ) * points1[i][1] + alpha * points2[i][1]
+        points.append((x,y))
+
+    # Allocate space for final output
+    imgMorph = np.zeros(img1.shape, dtype = img1.dtype)
+    # Read triangles from tri.txt
+    with open("tri.txt") as file :
+        for line in file :
+            x,y,z = line.split()
+
+            x = int(x)
+            y = int(y)
+            z = int(z)
+
+            # This is just the triangles cords... we are just going to have the ones that spit out by it self. :/
+            t1 = [points1[x], points1[y], points1[z]]
+            t2 = [points2[x], points2[y], points2[z]]
+            t = [ points[x], points[y], points[z] ]
+            # print(points[x], points[y], points[z],x,y,z)
+
+            # Morph one triangle at a time. (imag1,imag2, blank morphing, triangle1,2,3, and alpha
+            morphTriangle(img1, img2, imgMorph, t1, t2, t, alpha)
+
+
+    # Display Result
+    cv2.imshow("Morphed Face", np.uint8(imgMorph))
     cv2.waitKey(0)
-
-
