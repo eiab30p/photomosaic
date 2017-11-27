@@ -205,5 +205,5 @@ def resize(img, width, height):
 
 
 if __name__ == '__main__':
-    img = cv2.imread("base.jpg")
+    img = cv2.imread("Beach.jpg")
     resize(img, width=200, height=200)

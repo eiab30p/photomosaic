@@ -9,17 +9,17 @@ import random
 
 # This is used temp for a quick resize of all images. One time use. Then I removed all jpg.
 def resize_presidents():
-    for filename in os.listdir("./based_image_db"):
+    for filename in os.listdir("./morphing.based_image_db"):
         if filename.endswith(".jpg"):
-            img1 = cv2.imread("./based_image_db/" + filename)
+            img1 = cv2.imread("./morphing.based_image_db/" + filename)
             newsize_img = cv2.resize(img1, (500, 500))
-            cv2.imwrite("./based_image_db/" + filename[:-4] + ".png", newsize_img)
-            os.remove("./based_image_db/" + filename)
+            cv2.imwrite("./morphing.based_image_db/" + filename[:-4] + ".png", newsize_img)
+            os.remove("./morphing.based_image_db/" + filename)
 
 
 # We are going to try and use an api to get the cordinates of what we need :S
 def get_facial_landscapes():
-    for filename in os.listdir("./based_image_db"):
+    for filename in os.listdir("./morphing.based_image_db"):
         if filename.endswith(".png"):
             print("New Image!!!!!!"+filename+"\n\n")
             url = "https://api-us.faceplusplus.com/facepp/v3/detect"
@@ -27,14 +27,14 @@ def get_facial_landscapes():
                   "api_secret":"sEsX4zUtz2ZizNLA_GLZqvhGyWMl364Q",
                   "return_landmark":1}
             files={
-                "image_file":open("./based_image_db/" + filename,"rb")
+                "image_file":open("./morphing.based_image_db/" + filename,"rb")
             }
             response = requests.post(url, data=data, files=files)
             req_con=response.content.decode('utf-8')
             req_dict = JSONDecoder().decode(req_con)
             # python reads the entire json as dictionaries so we call each key until value of x and y
             # IDE terminal may cause issues try in commandline
-            f = open("./facial_landscapes/" + filename[:-4]+".txt",'w')
+            f = open("./morphing.facial_landscapes/" + filename[:-4]+".txt",'w')
 
             for i in req_dict["faces"][0]["landmark"]:
                 f.write(str(req_dict["faces"][0]["landmark"][i]["x"]) + " "
@@ -144,12 +144,12 @@ if __name__ == '__main__':
 
 
     # Read in the image.
-    start = cv2.imread("./based_image_db/normalJason.png")
-    end = cv2.imread("./based_image_db/aquaJason.png")
+    start = cv2.imread("./morphing.based_image_db/normalJason.png")
+    end = cv2.imread("./morphing.based_image_db/aquaJason.png")
 
     # Read facial Landscape
-    start_txt = "./facial_landscapes/normalJason.txt"
-    end_txt = "./facial_landscapes/aquaJason.txt"
+    start_txt = "./morphing.facial_landscapes/normalJason.txt"
+    end_txt = "./morphing.facial_landscapes/aquaJason.txt"
 
     # Scope for SubDiv2D
     rect = (0, 0, 500, 500)

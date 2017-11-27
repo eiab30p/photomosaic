@@ -76,8 +76,8 @@ def morphTriangle(img1, img2, img, t1, t2, t, alpha) :
 
 if __name__ == '__main__' :
 
-    filename1 = './based_image_db/normalJason.png'
-    filename2 = './based_image_db/aquaJason.png'
+    filename1 = './morphing.based_image_db/normalJason.png'
+    filename2 = './morphing.based_image_db/aquaJason.png'
     alpha = 0.4
 
     # Read images

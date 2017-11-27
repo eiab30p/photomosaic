@@ -118,13 +118,13 @@ if __name__ == '__main__':
         print("URL is invalid, using default")
         src = "https://depositphotos.com/search/traveling.html"
 
-    # This is checking if the database is already created in the image_db directory to reduce the time of collecting
+    # This is checking if the database is already created in the photomosaic.image_db directory to reduce the time of collecting
     # images each time. You need to have at least one in the directory to work
 
     print("Checking if Database already exist.")
     search_file_name = src[33:-5]
     db_exist = False
-    for file in os.listdir("./image_db"):
+    for file in os.listdir("./photomosaic.image_db"):
         if file == (search_file_name + ".txt"):
             print("Database Exist, Let's Create a Mosaic")
             db_exist = True
@@ -140,7 +140,7 @@ if __name__ == '__main__':
     base = cv2.imread("base.jpg")
 
     # We are reading the images from text file.
-    db_images = json.load(open("./image_db/" + search_file_name + ".txt"))
+    db_images = json.load(open("./photomosaic.image_db/" + search_file_name + ".txt"))
     base_image_processing(base, db_images)
 
 
