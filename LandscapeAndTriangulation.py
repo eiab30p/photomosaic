@@ -90,7 +90,7 @@ def delaunay(subdiv):
 
         if rect_contains(r, pt1) and rect_contains(r, pt2) and rect_contains(r, pt3) :
             tri.append((pt1, pt2, pt3))
-    tri.sort(key=lambda pts: (pts[0], pts[1], pts[2]))
+    tri.sort(key=lambda pts: (min(pts, key=lambda pt : (pt))))
 
     return tri
 
@@ -121,6 +121,7 @@ def create_subdiv(points, rect):
         subdiv.insert(p)
     return subdiv
 
+
 # Write Triangulation to file for morphing
 def write_tri_points (tri_points, filename ):
     f = open("./triangulation_points/"+filename+".txt", 'w')
@@ -133,6 +134,7 @@ def write_tri_points (tri_points, filename ):
         f.write(str(tri_points[i][2][0]) + " " + str(tri_points[i][2][1]) + "\n")
 
     f.close()
+
 
 if __name__ == '__main__':
 
@@ -165,13 +167,18 @@ if __name__ == '__main__':
     start_points = readpoints(start_txt)
     subdiv = create_subdiv(start_points, rect)
     tri_points = []
-    tri_points = delaunay(subdiv)
-    write_tri_points(tri_points, "start")
+    tri_points1 = delaunay(subdiv)
+    write_tri_points(tri_points1, "start")
     end_points = readpoints(end_txt)
     subdiv = create_subdiv(end_points, rect)
     tri_points = []
-    tri_points = delaunay(subdiv)
-    write_tri_points(tri_points, "end")
+    tri_points2 = delaunay(subdiv)
+    write_tri_points(tri_points2, "end")
+
+
+
+
+
 
     for i in range(4):
         landscape_points = weighted_ponts(alpha, start_points, end_points, len(start_points))

@@ -99,9 +99,9 @@ if __name__ == '__main__' :
 
 
     # Allocate space for final output
-    imgMorph = np.zeros(img1.shape, dtype = img1.dtype)
+    imgMorph = np.zeros(img1.shape, dtype=img1.dtype)
 
-    for i in range(len(points1)):
+    for i in range(len(points2)):
         t1 = [points1[i][0], points1[i][1], points1[i][2]]
         t2 = [points2[i][0], points2[i][1], points2[i][2]]
         t = [points[i][0], points[i][1], points[i][2]]
