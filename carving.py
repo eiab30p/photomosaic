@@ -119,9 +119,18 @@ def vertical_seam(ener):
             previous = np.argmin(row)
             seam.append([previous, i])
         else:
-            left = row[previous - 1] if previous - 1 >= 0 else 1e6
+
+            if previous - 1 >= 0:
+                left = row[previous - 1]
+            else
+                left = 1e6
+
             middle = row[previous]
-            right = row[previous + 1] if previous + 1 < width else 1e6
+
+            if previous + 1 < width:
+                right = row[previous + 1]
+            else:
+                right = 1e6
 
             previous = previous + np.argmin([left, middle, right]) - 1
             seam.append([previous, i])
@@ -136,6 +145,7 @@ def draw_seam(img, seam):
     cv2.waitKey(1)
     cv2.destroyAllWindows()
 
+
 def remove_horizontal_seam(img, seam):
     height, width, bands = img.shape
     removed = np.zeros((height - 1, width, bands), np.uint8)
@@ -145,6 +155,7 @@ def remove_horizontal_seam(img, seam):
         removed[y:height - 1, x] = img[y + 1:height, x]
 
     return removed
+
 
 def remove_vertical_seam(img, seam):
     height, width, bands = img.shape
@@ -157,7 +168,7 @@ def remove_vertical_seam(img, seam):
     return removed
 
 
-def resize(img, width, height, interactive):
+def resize(img, width, height):
     result = img
 
     img_height, img_width = img.shape[:2]
@@ -171,7 +182,6 @@ def resize(img, width, height, interactive):
         dx = img_width - width
     else:
         dx = 0
-
 
     for i in range(dy):
         ener = cumulative_ener_horizontal(energy(result))
