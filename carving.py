@@ -122,7 +122,7 @@ def vertical_seam(ener):
 
             if previous - 1 >= 0:
                 left = row[previous - 1]
-            else
+            else:
                 left = 1e6
 
             middle = row[previous]
