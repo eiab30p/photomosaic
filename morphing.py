@@ -90,7 +90,7 @@ if __name__ == '__main__' :
 
     tri1 = './triangulation_points/start.txt'
     tri2 = './triangulation_points/end.txt'
-    tri3 = './triangulation_points/0.2.txt'
+    tri3 = './triangulation_points/0.4.txt'
 
     # Read array of corresponding points
     points1 = readPoints(tri1)
@@ -101,10 +101,10 @@ if __name__ == '__main__' :
     # Allocate space for final output
     imgMorph = np.zeros(img1.shape, dtype=img1.dtype)
 
-    for i in range(len(points2)):
-        t1 = [points1[i][0], points1[i][1], points1[i][2]]
+    for i in range(len(points1)):
+        t1 = [points2[i][0], points2[i][1], points2[i][2]]
         t2 = [points2[i][0], points2[i][1], points2[i][2]]
-        t = [points[i][0], points[i][1], points[i][2]]
+        t = [points1[i][0], points1[i][1], points1[i][2]]
 
         # Morph one triangle at a time. (imag1,imag2, blank morphing, triangle1,2,3, and alpha
         morphTriangle(img1, img2, imgMorph, t1, t2, t, alpha)

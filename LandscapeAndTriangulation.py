@@ -90,7 +90,7 @@ def delaunay(subdiv):
 
         if rect_contains(r, pt1) and rect_contains(r, pt2) and rect_contains(r, pt3) :
             tri.append((pt1, pt2, pt3))
-    tri.sort(key=lambda pts: (min(pts, key=lambda pt : (pt))))
+    tri.sort(key=lambda pts: (max(pts, key=lambda pt : (pt))))
 
     return tri
 
